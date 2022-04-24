@@ -1,11 +1,16 @@
 const path = require('path');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 module.exports = {
 	mode: 'development',
-	entry: './src/index.js',
+	entry: {
+		SDK: './src/index.js'
+	},
 	output: {
 		path: path.resolve(__dirname, 'dist'),
-		filename: 'build.js'
+		filename: 'build.js',
+    libraryTarget: 'umd'
 	},
 	devtool: 'eval-source-map',
 	devServer: {
@@ -18,6 +23,7 @@ module.exports = {
 		rules: [
 			{
 				test: /\.js$/,
+				exclude: /node_modules/,
 				use: [
 					{
 						loader: 'babel-loader',
@@ -26,18 +32,26 @@ module.exports = {
 							['@babel/preset-env']
 						}
 					}
-				],
-				exclude: '/node_modules/'
+				]
 			}
 		]
 	},
 	plugins: [
+		new CleanWebpackPlugin(),
 		new HtmlWebpackPlugin({
-			inject: true,
-			template: './public/index.html'
+			inject: 'head',
+			template: './public/index.html',
+			scriptLoading: 'blocking'
+		}),
+		new UglifyJsPlugin({
+			test: /\.js$/,
+			exclude: /node_modules/
 		})
 	],
 	performance: {
 		hints: false
-	}
+	},
+	resolve: {
+    extensions: ['.js'],
+  },
 }
