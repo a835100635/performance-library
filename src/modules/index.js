@@ -1,7 +1,7 @@
 import { PerformanceLibrary } from './instance';
 
-export const createModules = () => {
+export const createModules = (options) => {
   return {
-    performanceLibrary: new PerformanceLibrary()
+    performanceLibrary: new PerformanceLibrary(options)
   }
 }
