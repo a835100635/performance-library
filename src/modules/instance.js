@@ -8,6 +8,7 @@ export class PerformanceLibrary {
     }
     // performance 对象
     this._performance = window.performance;
+    console.log(this._performance);
     // 
     this.info = {};
 
@@ -17,14 +18,27 @@ export class PerformanceLibrary {
 
   // 初始化执行
   init() {
-    const { redirectCount, type } = this._performance.navigation;
+    const _info = this.info;
+    const { navigation: { redirectCount, type }, memory } = this._performance;
     // 加载方式
-    this.info.loadingMethod = NAVIGATION_TYPE[type];
+    _info.loadingMethod = NAVIGATION_TYPE[type];
     // 重定向次数
-    this.info.redirectCount = redirectCount;
+    _info.redirectCount = redirectCount;
+    // 内存相关
+    _info.memory = memory;
+    const { usedJSHeapSize, totalJSHeapSize } = memory;
+    // 当使用内存大于总内存时出现内存泄漏
+    if (usedJSHeapSize > totalJSHeapSize) {
+      // 内存泄漏
+      _info.memory.memoryLeakage = true;
+    } else {
+      _info.memory.memoryLeakage = false;
+    }
 
-    const isTiming = 'PerformanceNavigationTiming' in this._performance;
-    const timing = isTiming ? this._performance.timing : this._performance.getEntriesByType('navigation')[0];
+    const navigation = this._performance.getEntriesByType('navigation')
+    const isTiming = 'PerformanceNavigationTiming' in this._performance && navigation.length;
+    const timing = isTiming ? this._performance.timing : navigation[0];
+
     this.handleTiming(timing);
   }
 
@@ -33,24 +47,9 @@ export class PerformanceLibrary {
     return this.info;
   }
 
-  // 计算yong'hsu
+  // 计算用时
   handleTiming(timing) {
-    this.info.timing = timing;
-    const { redirectCount, redirectEnd, domainLookupStart, fetchStart } = timing;
-    Object.assign(this.info, {
-      // 跳转耗时
-      redirect: {
-        timeConsuming: redirectEnd - redirectCount,
-        startTime: redirectCount,
-        Endtime: redirectEnd
-      },
-      // app cache 耗时
-      cache: {
-        timeConsuming: domainLookupStart - fetchStart,
-        startTime: fetchStart,
-        Endtime: domainLookupStart
-      }
-    })
+
   }
 
 }
